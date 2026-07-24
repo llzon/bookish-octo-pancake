@@ -5,7 +5,964 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>舒尔特方格训练</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>舒尔特方格训练</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+font-family: -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+min-height: 100vh;
+background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+display: flex;
+justify-content: center;
+align-items: flex-start;
+padding: 30px 20px;
+}
+.main-layout {
+display: flex;
+gap: 28px;
+align-items: flex-start;
+max-width: 860px;
+width: 100%;
+flex-wrap: wrap;
+justify-content: center;
+}
+.container {
+background: rgba(255,255,255,0.07);
+backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+border: 1px solid rgba(255,255,255,0.1);
+border-radius: 24px;
+padding: 32px 36px;
+max-width: 520px;
+width: 100%;
+box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+color: #fff;
+flex-shrink: 0;
+}
+h1 {
+text-align: center;
+font-size: 26px;
+font-weight: 700;
+letter-spacing: 2px;
+margin-bottom: 6px;
+}
+h1 span { color: #7c9aff; }
+.subtitle {
+text-align: center;
+font-size: 13px;
+color: rgba(255,255,255,0.5);
+margin-bottom: 22px;
+}
+/* 难度选择 */
+.difficulty-row {
+display: flex;
+justify-content: center;
+gap: 10px;
+margin-bottom: 20px;
+flex-wrap: wrap;
+}
+.difficulty-row label {
+padding: 6px 18px;
+border-radius: 20px;
+background: rgba(255,255,255,0.06);
+border: 1px solid rgba(255,255,255,0.12);
+cursor: pointer;
+font-size: 14px;
+transition: all 0.2s;
+user-select: none;
+}
+.difficulty-row input { display: none; }
+.difficulty-row input:checked + label {
+background: #7c9aff;
+border-color: #7c9aff;
+color: #fff;
+box-shadow: 0 0 20px rgba(124,154,255,0.3);
+}
+.difficulty-row label:hover { background: rgba(255,255,255,0.12); }
+/* 状态栏 */
+.stats {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 16px;
+font-size: 14px;
+}
+.stats .time {
+font-size: 28px;
+font-weight: 700;
+font-variant-numeric: tabular-nums;
+}
+.stats .time.good { color: #5be7a0; }
+.stats .time.slow { color: #ff7b7b; }
+.stats .target {
+font-size: 13px;
+color: rgba(255,255,255,0.5);
+}
+.stats .target span { color: #5be7a0; font-weight: 600; }
+.progress-row {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 10px;
+font-size: 14px;
+}
+.progress-row .next-number {
+background: rgba(255,255,255,0.08);
+padding: 4px 14px;
+border-radius: 12px;
+}
+.progress-row .next-number strong {
+font-size: 18px;
+color: #ffd866;
+}
+.best-record {
+text-align: center;
+font-size: 13px;
+color: rgba(255,255,255,0.45);
+margin-bottom: 18px;
+min-height: 20px;
+}
+.hard-notice {
+text-align: center;
+font-size: 12px;
+color: #ff7b7b;
+background: rgba(255,123,123,0.12);
+border-radius: 8px;
+padding: 4px 10px;
+margin-bottom: 12px;
+display: none;
+}
+.hard-notice.show { display: block; }
+/* 方格网格 */
+.grid-wrapper {
+position: relative;
+margin-bottom: 20px;
+}
+.grid {
+display: grid;
+grid-template-columns: repeat(5, 1fr);
+gap: 6px;
+aspect-ratio: 1 / 1;
+}
+.cell {
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 22px;
+font-weight: 700;
+border-radius: 10px;
+cursor: pointer;
+user-select: none;
+transition: all 0.15s;
+background: rgba(255,255,255,0.08);
+color: #fff;
+position: relative;
+}
+.cell:hover:not(.found):not(.wrong):not(.covered) {
+transform: scale(1.04);
+box-shadow: 0 0 16px rgba(124,154,255,0.25);
+}
+.cell.found {}
+.cell.wrong {
+animation: shake 0.3s;
+}
+.cell.covered {
+color: rgba(255,255,255,0.12);
+font-size: 18px;
+background: rgba(255,255,255,0.03);
+}
+.cell.covered:hover {
+box-shadow: 0 0 10px rgba(124,154,255,0.1);
+}
+@keyframes shake {
+0%,100% { transform: translateX(0); }
+25% { transform: translateX(-6px); }
+50% { transform: translateX(6px); }
+75% { transform: translateX(-4px); }
+}
+/* 按钮 */
+.btn-group {
+display: flex;
+gap: 10px;
+justify-content: center;
+flex-wrap: wrap;
+}
+.btn {
+padding: 10px 28px;
+border: none;
+border-radius: 14px;
+font-size: 15px;
+font-weight: 600;
+cursor: pointer;
+transition: all 0.2s;
+background: rgba(255,255,255,0.08);
+color: #fff;
+border: 1px solid rgba(255,255,255,0.12);
+}
+.btn:hover { background: rgba(255,255,255,0.16); transform: translateY(-1px); }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+.btn-primary {
+background: #7c9aff;
+border-color: #7c9aff;
+color: #fff;
+}
+.btn-primary:hover {
+background: #97afff;
+box-shadow: 0 0 24px rgba(124,154,255,0.35);
+}
+.btn-success {
+background: linear-gradient(135deg, #2d9b6e, #50dc8c);
+border: none;
+color: #fff;
+}
+.btn-success:hover {
+background: linear-gradient(135deg, #3aad7e, #60ec9c);
+}
+.btn-mute {
+background: rgba(255,255,255,0.08);
+border: 1px solid rgba(255,255,255,0.15);
+color: #fff;
+padding: 10px 16px;
+border-radius: 30px;
+font-size: 14px;
+font-weight: 600;
+cursor: pointer;
+transition: all 0.2s;
+}
+.btn-mute:hover {
+background: rgba(255,255,255,0.15);
+}
+/* 完成弹窗 */
+.modal-overlay {
+display: none;
+position: fixed;
+inset: 0;
+background: rgba(0,0,0,0.6);
+backdrop-filter: blur(6px);
+z-index: 100;
+justify-content: center;
+align-items: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+background: #1e1b3a;
+border: 1px solid rgba(255,255,255,0.15);
+border-radius: 20px;
+padding: 36px 44px;
+text-align: center;
+max-width: 400px;
+box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+}
+.modal h2 { font-size: 24px; margin-bottom: 8px; }
+.modal .modal-time {
+font-size: 48px;
+font-weight: 800;
+margin: 12px 0;
+}
+.modal .modal-time.pass { color: #5be7a0; }
+.modal .modal-time.fail { color: #ff7b7b; }
+.modal .modal-tip {
+font-size:14px;
+color:#ffd866;
+margin:8px 0;
+}
+.modal .modal-detail { color: rgba(255,255,255,0.6); margin-bottom: 20px; }
+.modal .btn { min-width: 120px; }
+/* ========== 排行榜（分难度） ========== */
+.leaderboard {
+background: rgba(255,255,255,0.07);
+backdrop-filter: blur(20px);
+border: 1px solid rgba(255,255,255,0.1);
+border-radius: 24px;
+padding: 28px 24px;
+max-width: 300px;
+width: 100%;
+box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+color: #fff;
+flex-shrink: 0;
+}
+.leaderboard h2 {
+text-align: center;
+font-size: 20px;
+font-weight: 700;
+margin-bottom: 4px;
+}
+.leaderboard h2 span { color: #ffd866; }
+.leaderboard .lb-sub {
+text-align: center;
+font-size: 12px;
+color: rgba(255,255,255,0.4);
+margin-bottom: 14px;
+}
+/* 标签栏 */
+.lb-tabs {
+display: flex;
+justify-content: center;
+gap: 4px;
+margin-bottom: 14px;
+}
+.lb-tab {
+flex: 1;
+padding: 6px 0;
+border: none;
+border-radius: 10px;
+font-size: 13px;
+font-weight: 600;
+cursor: pointer;
+transition: all 0.2s;
+background: rgba(255,255,255,0.05);
+color: rgba(255,255,255,0.5);
+}
+.lb-tab:hover {
+background: rgba(255,255,255,0.12);
+color: #fff;
+}
+.lb-tab.active {
+background: #7c9aff;
+color: #fff;
+box-shadow: 0 0 16px rgba(124,154,255,0.25);
+}
+.lb-empty {
+text-align: center;
+color: rgba(255,255,255,0.3);
+font-size: 14px;
+padding: 30px 0;
+}
+.lb-list {
+list-style: none;
+max-height: 320px;
+overflow-y: auto;
+}
+.lb-list::-webkit-scrollbar {
+width: 4px;
+}
+.lb-list::-webkit-scrollbar-track {
+background: transparent;
+}
+.lb-list::-webkit-scrollbar-thumb {
+background: rgba(255,255,255,0.2);
+border-radius: 4px;
+}
+.lb-item {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 10px 12px;
+border-radius: 12px;
+margin-bottom: 6px;
+background: rgba(255,255,255,0.05);
+transition: background 0.2s;
+font-size: 14px;
+flex-wrap: wrap;
+gap:6px;
+}
+.lb-item:hover { background: rgba(255,255,255,0.1); }
+.lb-item .rank {
+font-weight: 700;
+font-size: 15px;
+min-width: 32px;
+color: rgba(255,255,255,0.6);
+}
+.lb-item .rank.gold { color: #ffd866; }
+.lb-item .rank.silver { color: #c0c0c0; }
+.lb-item .rank.bronze { color: #cd7f32; }
+.lb-item .lb-time {
+font-weight: 700;
+font-variant-numeric: tabular-nums;
+color: #5be7a0;
+flex:1;
+}
+.lb-item .lb-date {
+font-size: 11px;
+color: rgba(255,255,255,0.3);
+width:100%;
+}
+.lb-challenge-btn{
+font-size:11px;
+padding:3px 8px;
+border-radius:6px;
+border:none;
+background:#7c9aff;
+color:#fff;
+cursor:pointer;
+}
+.lb-challenge-btn:hover{
+background:#97afff;
+}
+.lb-clear-btn {
+display: block;
+margin: 14px auto 0;
+padding: 6px 18px;
+border: none;
+border-radius: 10px;
+font-size: 12px;
+cursor: pointer;
+background: rgba(255,255,255,0.06);
+color: rgba(255,255,255,0.4);
+transition: all 0.2s;
+}
+.lb-clear-btn:hover {
+background: rgba(255,123,123,0.2);
+color: #ff7b7b;
+}
+@media (max-width: 600px) {
+.container { padding: 20px 14px; }
+.cell { font-size: 22px; }
+.btn { padding: 8px 14px; font-size: 12px; min-width: 60px; }
+.leaderboard { width: 100%; max-width: 100%; flex: 1 1 100%; }
+}
+</style>
+</head>
+<body>
+<div class="main-layout">
+<div class="container">
+<h1><span>🔢</span> 舒尔特方格</h1>
+<div class="subtitle">专注力训练 · 目标线 <span id="targetDisplay">25.00</span>s</div>
+<!-- 难度 -->
+<div class="difficulty-row">
+<input type="radio" name="diff" id="diffEasy" value="easy" checked>
+<label for="diffEasy">🟢 低级</label>
+<input type="radio" name="diff" id="diffMedium" value="medium">
+<label for="diffMedium">🟡 中档</label>
+<input type="radio" name="diff" id="diffHard" value="hard">
+<label for="diffHard">🔴 高档</label>
+</div>
+<div class="hard-notice" id="hardNotice">⚠️ 高档模式：每 5 秒随机打乱未点击格子的数字和颜色</div>
+<!-- 状态 -->
+<div class="stats">
+<div>
+<div class="target">🎯 目标线 <span>25.00</span>s</div>
+</div>
+<div class="time" id="timerDisplay">0.00s</div>
+</div>
+<div class="progress-row">
+<span>找到 <strong id="currentNumDisplay">1</strong> / 25</span>
+<span class="next-number">下一个 → <strong id="nextNumDisplay">1</strong></span>
+</div>
+<div class="best-record" id="bestRecord"></div>
+<!-- 网格 -->
+<div class="grid-wrapper">
+<div class="grid grid-3" id="grid"></div>
+</div>
+<!-- 按钮区域（静音按钮） -->
+<div class="btn-group">
+<button class="btn" id="reshuffleBtn">🔀 重排</button>
+<button class="btn" id="resetBtn">🔄 重置</button>
+<button class="btn-mute" id="muteBtn">🔊 有声</button>
+</div>
+<!-- 完成弹窗 -->
+<div class="modal-overlay" id="modalOverlay">
+<div class="modal">
+<h2 id="modalTitle">🎉 太棒了！</h2>
+<div class="modal-time" id="modalTime">0.00s</div>
+<div class="modal-tip" id="modalTip"></div>
+<div class="modal-detail" id="modalDetail"></div>
+<div class="btn-group">
+<button class="btn btn-primary" id="modalNextBtn">下一轮 ▶</button>
+<button class="btn" id="modalCloseBtn">关闭</button>
+</div>
+</div>
+</div>
+</div>
+<!-- ===== 排行榜 ===== -->
+<div class="leaderboard">
+<h2><span>🏆</span> 排行榜</h2>
+<div class="lb-sub">按难度分列</div>
+<div class="lb-tabs">
+<button class="lb-tab active" data-diff="easy">🟢 低级</button>
+<button class="lb-tab" data-diff="medium">🟡 中档</button>
+<button class="lb-tab" data-diff="hard">🔴 高档</button>
+</div>
+<div class="lb-empty" id="lbEmpty">暂无记录</div>
+<ul class="lb-list" id="lbList"></ul>
+<button class="lb-clear-btn" id="lbClearBtn">🗑 清空当前难度</button>
+</div>
+</div>
+<script>
+// ========== 音频模块（语速rate=1，弹窗+语音并行同步触发） ==========
+let audioCtx = null;
+let isMute = false;
+const muteBtn = document.getElementById('muteBtn');
+
+// 全局页面任意点击激活音频上下文（解决浏览器自动播放拦截）
+document.body.addEventListener('click', () => {
+if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+if (audioCtx.state === 'suspended') audioCtx.resume();
+}, { once: true });
+
+// 点击格子短促音效（轻量同步，无阻塞）
+function playClickAudio() {
+if(isMute || !audioCtx) return;
+const osc = audioCtx.createOscillator();
+const gain = audioCtx.createGain();
+osc.type = 'sine';
+osc.frequency.setValueAtTime(1300, audioCtx.currentTime);
+gain.gain.setValueAtTime(0.95, audioCtx.currentTime);
+gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+osc.connect(gain);
+gain.connect(audioCtx.destination);
+osc.start();
+osc.stop(audioCtx.currentTime + 0.12);
+}
+
+// 朗读文本，标准1倍语速，无任何延迟等待
+function asyncSpeakText(text) {
+if(isMute) return;
+window.speechSynthesis.cancel();
+const utter = new SpeechSynthesisUtterance(text);
+utter.lang = 'en-US';
+utter.rate = 1;
+utter.volume = 0.9;
+window.speechSynthesis.speak(utter);
+}
+
+function playPassSound() { asyncSpeakText('good'); }
+function playFailSound() { asyncSpeakText('keep going'); }
+
+// 静音按钮切换逻辑
+muteBtn.addEventListener('click', ()=>{
+isMute = !isMute;
+muteBtn.textContent = isMute ? '🔇 静音' : '🔊 有声';
+if(isMute) window.speechSynthesis.cancel();
+});
+
+// ==================== 配置 ====================
+const TOTAL = 25;
+const TARGET_TIME = 25;
+// ==================== DOM 引用 ====================
+const gridEl = document.getElementById('grid');
+const timerDisplay = document.getElementById('timerDisplay');
+const currentNumDisplay = document.getElementById('currentNumDisplay');
+const nextNumDisplay = document.getElementById('nextNumDisplay');
+const bestRecord = document.getElementById('bestRecord');
+const reshuffleBtn = document.getElementById('reshuffleBtn');
+const resetBtn = document.getElementById('resetBtn');
+const hardNotice = document.getElementById('hardNotice');
+const diffRadios = document.querySelectorAll('input[name="diff"]');
+const modalOverlay = document.getElementById('modalOverlay');
+const modalTitle = document.getElementById('modalTitle');
+const modalTime = document.getElementById('modalTime');
+const modalTip = document.getElementById('modalTip');
+const modalDetail = document.getElementById('modalDetail');
+const modalNextBtn = document.getElementById('modalNextBtn');
+const modalCloseBtn = document.getElementById('modalCloseBtn');
+const lbEmpty = document.getElementById('lbEmpty');
+const lbList = document.getElementById('lbList');
+const lbClearBtn = document.getElementById('lbClearBtn');
+// ==================== 全局状态 ====================
+let numbers = [];
+let found = [];
+let currentNumber = 1;
+let completed = false;
+let isPlaying = false;
+let isRunning = false;
+let elapsedSeconds = 0;
+let startTime = 0;
+let timerId = null;
+let colorTimerId = null;
+let bestTime = null;
+let difficulty = 'easy';
+let cellColors = [];
+let challengeSnapshot = null;
+let leaderboard = [];
+let currentLbDiff = 'easy';
+// ==================== 工具函数 ====================
+function shuffle(arr) {
+for (let i = arr.length - 1; i > 0; i--) {
+const j = Math.floor(Math.random() * (i + 1));
+[arr[i], arr[j]] = [arr[j], arr[i]];
+}
+return arr;
+}
+function randomColor() {
+const h = Math.floor(Math.random() * 360);
+const s = 60 + Math.floor(Math.random() * 30);
+const l = 35 + Math.floor(Math.random() * 25);
+return `hsl(${h}, ${s}%, ${l}%)`;
+}
+function formatTime(seconds) {
+return seconds.toFixed(2) + 's';
+}
+function getNowStr() {
+const d = new Date();
+const pad = n => String(n).padStart(2, '0');
+return `${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function getDiffLabel(val) {
+const map = { easy: '低级', medium: '中档', hard: '高档' };
+return map[val] || val;
+}
+function setDiffRadio(val){
+diffRadios.forEach(radio=>{
+radio.checked = radio.value === val;
+})
+}
+function snapshotEqual(aSnap, bSnap) {
+if(!aSnap || !bSnap) return false;
+const numA = aSnap.numbers.join(',');
+const numB = bSnap.numbers.join(',');
+const colA = aSnap.cellColors.join(',');
+const colB = bSnap.cellColors.join(',');
+return numA === numB && colA === colB;
+}
+// 统一清理所有定时器
+function clearAllTimers() {
+if(timerId) { clearInterval(timerId); timerId = null; }
+if(colorTimerId) { clearInterval(colorTimerId); colorTimerId = null; }
+}
+// ==================== 排行榜 ====================
+function loadLeaderboard() {
+try {
+const saved = localStorage.getItem('schulte_leaderboard_v4');
+if (saved) leaderboard = JSON.parse(saved);
+} catch(e) { leaderboard = []; }
+}
+function saveLeaderboard() {
+try {
+localStorage.setItem('schulte_leaderboard_v4', JSON.stringify(leaderboard));
+} catch(e) {}
+}
+function addRecord(seconds, diff) {
+const snapshot = {
+numbers: [...numbers],
+cellColors: [...cellColors]
+};
+let existIndex = -1;
+let oldBest = null;
+for(let i=0;i<leaderboard.length;i++){
+const item = leaderboard[i];
+if(item.diff === diff && snapshotEqual(item.snapshot, snapshot)){
+existIndex = i;
+oldBest = item.time;
+break;
+}
+}
+if(existIndex >= 0){
+if(seconds < oldBest){
+leaderboard[existIndex] = {
+time: seconds,
+diff: diff,
+date: getNowStr(),
+snapshot: snapshot
+};
+leaderboard.sort((a, b) => a.time - b.time);
+if (leaderboard.length > 150) leaderboard = leaderboard.slice(0, 150);
+saveLeaderboard();
+renderLeaderboard();
+return { type: 'update', oldBest };
+}else{
+return { type: 'fail', oldBest };
+}
+}else{
+leaderboard.push({
+time: seconds,
+diff: diff,
+date: getNowStr(),
+snapshot: snapshot
+});
+leaderboard.sort((a, b) => a.time - b.time);
+if (leaderboard.length > 150) leaderboard = leaderboard.slice(0, 150);
+saveLeaderboard();
+renderLeaderboard();
+return { type: 'new' };
+}
+}
+function clearLeaderboardByDiff(diff) {
+leaderboard = leaderboard.filter(r => r.diff !== diff);
+saveLeaderboard();
+renderLeaderboard();
+}
+function renderLeaderboard() {
+const filtered = leaderboard.filter(r => r.diff === currentLbDiff);
+if (filtered.length === 0) {
+lbList.style.display = 'none';
+lbEmpty.style.display = 'block';
+return;
+}
+lbEmpty.style.display = 'none';
+lbList.style.display = 'block';
+lbList.innerHTML = '';
+const top = Math.min(filtered.length, 50);
+for (let i = 0; i < top; i++) {
+const rec = filtered[i];
+const li = document.createElement('li');
+li.className = 'lb-item';
+const rankSpan = document.createElement('span');
+rankSpan.className = 'rank';
+if (i === 0) rankSpan.classList.add('gold');
+else if (i === 1) rankSpan.classList.add('silver');
+else if (i === 2) rankSpan.classList.add('bronze');
+rankSpan.textContent = `#${i + 1}`;
+const timeSpan = document.createElement('span');
+timeSpan.className = 'lb-time';
+timeSpan.textContent = formatTime(rec.time);
+let challengeBtn = null;
+if(i <=2 && rec.snapshot){
+challengeBtn = document.createElement('button');
+challengeBtn.className = 'lb-challenge-btn';
+challengeBtn.textContent = '挑战';
+challengeBtn.onclick = ()=>{
+difficulty = rec.diff;
+setDiffRadio(difficulty);
+hardNotice.classList.toggle('show', difficulty === 'hard');
+challengeSnapshot = rec.snapshot;
+fullReset();
+}
+}
+const dateSpan = document.createElement('span');
+dateSpan.className = 'lb-date';
+dateSpan.textContent = rec.date;
+li.appendChild(rankSpan);
+li.appendChild(timeSpan);
+if(challengeBtn) li.appendChild(challengeBtn);
+li.appendChild(dateSpan);
+lbList.appendChild(li);
+}
+}
+// ==================== 核心游戏逻辑 ====================
+function generateGrid() {
+clearAllTimers();
+if(challengeSnapshot){
+numbers = [...challengeSnapshot.numbers];
+cellColors = [...challengeSnapshot.cellColors];
+challengeSnapshot = null;
+}else{
+numbers = Array.from({length: TOTAL}, (_, i) => i + 1);
+shuffle(numbers);
+if (difficulty === 'easy') {
+cellColors = new Array(TOTAL).fill(null);
+} else {
+cellColors = Array.from({length: TOTAL}, () => randomColor());
+}
+}
+found = new Array(TOTAL).fill(false);
+currentNumber = 1;
+completed = false;
+}
+function revealAllNumbers() {
+const cells = gridEl.querySelectorAll('.cell');
+for (let i = 0; i < TOTAL; i++) {
+cells[i].textContent = numbers[i];
+cells[i].classList.remove('covered');
+}
+}
+function renderGrid() {
+gridEl.innerHTML = '';
+for (let i = 0; i < TOTAL; i++) {
+const cell = document.createElement('div');
+cell.className = 'cell';
+cell.dataset.index = i;
+if (!isPlaying && numbers[i] !== 1) {
+cell.textContent = '❓';
+cell.classList.add('covered');
+} else {
+cell.textContent = numbers[i];
+}
+if (difficulty === 'easy') {
+if (!cell.classList.contains('covered')) {
+cell.style.background = 'rgba(255,255,255,0.08)';
+}
+} else {
+cell.style.background = cellColors[i];
+}
+if (found[i]) {
+cell.classList.add('found');
+}
+cell.addEventListener('click', () => onCellClick(i));
+gridEl.appendChild(cell);
+}
+updateUI();
+clearAllTimers();
+isPlaying = false;
+elapsedSeconds = 0;
+timerDisplay.textContent = '0.00s';
+timerDisplay.className = 'time';
+}
+function updateUI() {
+currentNumDisplay.textContent = currentNumber;
+nextNumDisplay.textContent = currentNumber;
+}
+function startTimer() {
+if (isRunning) return;
+isRunning = true;
+startTime = performance.now() - elapsedSeconds * 1000;
+clearAllTimers();
+timerId = setInterval(() => {
+const now = performance.now();
+elapsedSeconds = (now - startTime) / 1000;
+timerDisplay.textContent = formatTime(elapsedSeconds);
+timerDisplay.className = elapsedSeconds <= TARGET_TIME ? 'time good' : 'time slow';
+}, 30);
+}
+function stopTimer() {
+clearAllTimers();
+isRunning = false;
+if (startTime) {
+elapsedSeconds = (performance.now() - startTime) / 1000;
+timerDisplay.textContent = formatTime(elapsedSeconds);
+}
+}
+function shuffleUnfound() {
+const unfoundIndices = [];
+const unfoundNumbers = [];
+for (let i = 0; i < TOTAL; i++) {
+if (!found[i]) {
+unfoundIndices.push(i);
+unfoundNumbers.push(numbers[i]);
+}
+}
+if (unfoundIndices.length <= 1) return;
+shuffle(unfoundNumbers);
+for (let i = 0; i < unfoundIndices.length; i++) {
+numbers[unfoundIndices[i]] = unfoundNumbers[i];
+}
+for (const idx of unfoundIndices) {
+cellColors[idx] = randomColor();
+}
+}
+function applyShuffleToDOM() {
+const cells = gridEl.querySelectorAll('.cell');
+for (let i = 0; i < TOTAL; i++) {
+if (!found[i]) {
+cells[i].textContent = numbers[i];
+cells[i].style.background = cellColors[i];
+}
+}
+gridEl.style.transition = 'opacity 0.12s';
+gridEl.style.opacity = '0.7';
+setTimeout(() => { gridEl.style.opacity = '1'; }, 120);
+}
+function startShuffleTimer() {
+clearAllTimers();
+if (difficulty !== 'hard') return;
+colorTimerId = setInterval(() => {
+if (completed) {
+clearAllTimers();
+return;
+}
+if (!isPlaying) return;
+shuffleUnfound();
+applyShuffleToDOM();
+}, 5000);
+}
+function onCellClick(index) {
+if (completed) return;
+playClickAudio();
+const clickedNum = numbers[index];
+if (found[index]) return;
+if (!isPlaying && clickedNum === 1) {
+isPlaying = true;
+revealAllNumbers();
+startTimer();
+if (difficulty === 'hard') startShuffleTimer();
+} else if (!isPlaying) {
+return;
+}
+if (clickedNum === currentNumber) {
+found[index] = true;
+currentNumber++;
+if (currentNumber > TOTAL) {
+completed = true;
+stopTimer();
+const finalTime = elapsedSeconds;
+if (bestTime === null || finalTime < bestTime) {
+bestTime = finalTime;
+bestRecord.textContent = `🏆 最佳记录：${formatTime(bestTime)}（${getDiffLabel(difficulty)}）`;
+}
+const saveResult = addRecord(finalTime, difficulty);
+const passed = finalTime <= TARGET_TIME;
+// ========= 关键改动：弹窗DOM赋值 和 语音播放 同一行代码块并行执行，无任何等待 =========
+modalTip.textContent = '';
+modalTitle.textContent = passed ? '🎉 太棒了！' : '💪 再接再厉！';
+modalTime.textContent = formatTime(finalTime);
+modalTime.className = 'modal-time ' + (passed ? 'pass' : 'fail');
+if (saveResult.type === 'update') {
+modalTip.textContent = `突破本局历史最佳 ${formatTime(saveResult.oldBest)}，已更新排行榜记录`;
+} else if (saveResult.type === 'fail') {
+modalTip.textContent = `未突破本局历史最佳 ${formatTime(saveResult.oldBest)}，不写入排行榜`;
+}
+modalDetail.innerHTML = passed
+? `你在 <strong>${formatTime(finalTime)}</strong> 内完成（${getDiffLabel(difficulty)}），目标线 ${formatTime(TARGET_TIME)}s`
+: `用时 <strong>${formatTime(finalTime)}</strong>（${getDiffLabel(difficulty)}），目标线 ${formatTime(TARGET_TIME)}s`;
+modalOverlay.classList.add('show');
+// 弹窗DOM修改完成后，**立刻同步执行语音**，两者并行渲染/发声，无帧延迟
+if(passed){
+playPassSound();
+}else{
+playFailSound();
+}
+}
+updateUI();
+} else {
+const cell = gridEl.querySelector(`.cell[data-index="${index}"]`);
+cell.classList.remove('wrong');
+void cell.offsetWidth;
+cell.classList.add('wrong');
+setTimeout(() => cell.classList.remove('wrong'), 400);
+}
+}
+function fullReset() {
+clearAllTimers();
+isPlaying = false;
+elapsedSeconds = 0;
+timerDisplay.textContent = '0.00s';
+timerDisplay.className = 'time';
+generateGrid();
+renderGrid();
+modalOverlay.classList.remove('show');
+window.speechSynthesis.cancel();
+}
+// ==================== 事件绑定 ====================
+diffRadios.forEach(radio => {
+radio.addEventListener('change', () => {
+if (radio.checked) {
+difficulty = radio.value;
+challengeSnapshot = null;
+clearAllTimers();
+hardNotice.classList.toggle('show', difficulty === 'hard');
+fullReset();
+}
+});
+});
+reshuffleBtn.addEventListener('click', () => {
+challengeSnapshot = null;
+clearAllTimers();
+fullReset();
+});
+resetBtn.addEventListener('click', fullReset);
+modalNextBtn.addEventListener('click', fullReset);
+modalCloseBtn.addEventListener('click', () => modalOverlay.classList.remove('show'));
+modalOverlay.addEventListener('click', (e) => {
+if (e.target === modalOverlay) modalOverlay.classList.remove('show');
+});
+document.querySelectorAll('.lb-tab').forEach(tab => {
+tab.addEventListener('click', () => {
+document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+tab.classList.add('active');
+currentLbDiff = tab.dataset.diff;
+renderLeaderboard();
+});
+});
+lbClearBtn.addEventListener('click', () => {
+const label = getDiffLabel(currentLbDiff);
+if (!confirm(`确定要清空「${label}」难度的所有排行榜记录吗？`)) return;
+clearLeaderboardByDiff(currentLbDiff);
+});
+// ==================== 启动 ====================
+loadLeaderboard();
+renderLeaderboard();
+difficulty = 'easy';
+hardNotice.classList.remove('show');
+generateGrid();
+renderGrid();
+</script>
+</body>
+</html>
         body {
             font-family: -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
             min-height: 100vh;
